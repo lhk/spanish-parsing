@@ -13,8 +13,6 @@ try:
   cur.execute("drop table if exists 'spanish-english'")
   cur.execute("create table 'spanish-english'(spanish text, english text, type text)")
 
-  cur.execute("insert into 'spanish-english' values('a','b','c')")
-
   dictionary=open("spanish_dictionary_new.dict")
   frequency=open("most_used_words.txt")
 
@@ -23,6 +21,7 @@ try:
   #file into memory
   freq=mmap.mmap(frequency.fileno(),0,access=mmap.ACCESS_READ)
 
+  number=0
   for line in dictionary:
 
     m=re.match(r"([a-z]*)\s*([a-z]*):\s*([a-z,\s]*)",line)
@@ -33,6 +32,7 @@ try:
       english=m.group(3)
 
       if freq.find(spanish)!=-1:
+        number+=1
         print("found a common word")
         cur.execute("insert into 'spanish-english' values(?,?,?)",(spanish,vocab_type,english))
 
@@ -41,9 +41,13 @@ except lite.Error, e:
   sys.exit(1)
 
 finally:
+  print("data written: ",number)
   if con:
     con.commit()
     con.close()
 
   if dictionary:
     dictionary.close()
+
+  if frequency:
+    frequency.close()
